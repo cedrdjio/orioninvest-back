@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { RegisterDTO, LoginDTO } from '../dtos/auth.dto';
+import { CustomError } from '../common/errors/CustomError';
 
 const authService = new AuthService();
 
@@ -11,7 +12,8 @@ export class AuthController {
       const user = await authService.register(data);
       res.status(201).json(user);
     } catch (error) {
-      res.status(error.status || 500).json({ message: error.message });
+      const err = error as CustomError;
+      res.status(err.status || 500).json({ message: err.message });
     }
   }
 
@@ -21,7 +23,7 @@ export class AuthController {
       const result = await authService.login(data);
       res.status(200).json(result);
     } catch (error) {
-      res.status(error.status || 500).json({ message: error.message });
-    }
+      const err = error as CustomError;
+      res.status(err.status || 500).json({ message: err.message });    }
   }
 }

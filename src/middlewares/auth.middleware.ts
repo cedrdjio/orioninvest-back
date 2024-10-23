@@ -10,7 +10,14 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    req.user = decoded;
+    
+    // Ici, nous utilisons une variable locale pour stocker l'utilisateur décodé
+    const user = decoded; // Remplace 'decoded' par un type approprié si nécessaire
+
+    // Si vous devez passer l'utilisateur à un autre middleware ou à un contrôleur, 
+    // vous pouvez le faire via `res.locals` par exemple
+    res.locals.user = user; // Passer l'utilisateur au prochain middleware ou au contrôleur
+
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Token invalide' });
