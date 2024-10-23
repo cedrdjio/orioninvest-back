@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "doadmin",
+    "password": "AVNS_ZeN0Ur93Ubx56QM3ZT4",
+    "database": "defaultdb",
+    "port":"25060",
+    "host": "db-mysql-nyc3-97615-do-user-17405238-0.g.db.ondigitalocean.com",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
