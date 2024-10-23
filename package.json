@@ -29,7 +29,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.3",
     "sequelize": "^6.37.4",
-    "sequelize-cli": "^6.6.2",
+    "sequelize-cli": "^6.6.2"
 
   }
 }
