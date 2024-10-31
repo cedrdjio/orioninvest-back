@@ -5,8 +5,9 @@ import { RegisterDTO } from '../dtos/auth.dto';
 import { Op } from 'sequelize';  // Import Sequelize operator
 
 function generateReferralCode(name: string) {
+  const nameSansEspace = name.replace(/\s+/g, '');
   const randomString = Math.random().toString(36).substring(2, 8);
-  return `${name}-${randomString}`.toUpperCase();
+  return `${nameSansEspace}-${randomString}`.toUpperCase();
 }
 
 export class AuthService {
@@ -19,13 +20,14 @@ export class AuthService {
     if (existingUser) {
       throw new Error('L’email ou le numéro de téléphone est déjà utilisé.');
     }
+    if (!referrer_code) throw new Error('Code de référence null.');
 
     let referrer = null;
     if (referrer_code) {
       referrer = await User.findOne({ where: { referral_code: referrer_code } });
       if (!referrer) throw new Error('Code de référence invalide.');
-    }
-
+    }    
+      
     const hashedPassword = await bcrypt.hash(password, 10);
     const referral_code = generateReferralCode(name);
 
@@ -35,7 +37,7 @@ export class AuthService {
       email: email ?? '',
       password: hashedPassword,
       referral_code,
-      referrer_id: referrer ? referrer.id : null,
+      referrer_id: referrer_code,
       balance: 0,
       referral_balance: 0
     });
@@ -53,8 +55,8 @@ export class AuthService {
       throw new Error('Identifiants invalides.');
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
-    return { user, token };
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+    return {accessToken: token};
   }
 }
 

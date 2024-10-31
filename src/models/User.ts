@@ -8,7 +8,7 @@ interface UserAttributes {
   name: string;
   password: string;
   referral_code: string;
-  referrer_id?: number | null;
+  referrer_id?: string ;
   balance: number;
   referral_balance: number;
 }
@@ -22,7 +22,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public name!: string;
   public password!: string;
   public referral_code!: string;
-  public referrer_id?: number | null;
+  public referrer_id?: string ;
   public balance!: number;
   public referral_balance!: number;
 }
@@ -55,11 +55,11 @@ User.init(
     referral_code: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // Code de parrainage unique
     },
     referrer_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
     },
     balance: { type: DataTypes.FLOAT, defaultValue: 0 },
     referral_balance: { type: DataTypes.FLOAT, defaultValue: 0 },

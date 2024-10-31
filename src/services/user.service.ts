@@ -1,12 +1,10 @@
-// src/services/UserService.ts
-
-import User from '../models/User';
+import User from "../models/User";
 
 class UserService {
-  // Récupération du profil de l'utilisateur
-  static async getProfile(userId: number) {
-    const user = await User.findByPk(userId, {
-      attributes: { exclude: ['password'] }, // Exclure le mot de passe du profil
+  static async getProfile(email: string) {
+    const user = await User.findOne({
+      where: { email },
+      attributes: { exclude: ["password"] },
     });
     if (!user) {
       throw new Error("Utilisateur non trouvé");
@@ -14,11 +12,13 @@ class UserService {
     return user;
   }
 
-  // Récupération de la liste des filleuls
-  static async getReferrals(userId: number) {
+  static async getReferrals(userEmail: number) {
+    const referrer = await User.findOne({ where: { email: userEmail } });
+    if (!referrer)
+      throw new Error("code de parrainage non existant contacter l'admin");
     return await User.findAll({
-      where: { referrer_id: userId },
-      attributes: ['id', 'name', 'phone_number', 'email', 'createdAt'],
+      where: { referrer_id: referrer.referral_code },
+      attributes: ["id", "name", "phone_number", "email", "createdAt"],
     });
   }
 }
