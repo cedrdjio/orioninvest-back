@@ -1,18 +1,30 @@
-// src/modules/auth/models/User.ts
+import { DataTypes, Model, Optional } from 'sequelize';
+import sequelize from '../config/database'; // Assure-toi que ton fichier config Sequelize est correct
 
-import { DataTypes, Model } from 'sequelize';
-import sequelize from '../config/database';
+interface UserAttributes {
+  id: number;
+  phone_number: string;
+  email: string;
+  name: string;
+  password: string;
+  referral_code: string;
+  referrer_id?: number | null;
+  balance: number;
+  referral_balance: number;
+}
 
-class User extends Model {
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'referrer_id'> {}
+
+class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
-  public name!: string;
-  public phone!: string;
+  public phone_number!: string;
   public email!: string;
+  public name!: string;
   public password!: string;
-  public referralCode?: string;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public referral_code!: string;
+  public referrer_id?: number | null;
+  public balance!: number;
+  public referral_balance!: number;
 }
 
 User.init(
@@ -22,33 +34,41 @@ User.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    phone_number: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+      unique: true, // Numéro unique
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
+      allowNull: false,
+      unique: true, // Email unique
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    referralCode: {
+    referral_code: {
       type: DataTypes.STRING,
+      allowNull: false,
+      unique: true, // Code de parrainage unique
+    },
+    referrer_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
+    balance: { type: DataTypes.FLOAT, defaultValue: 0 },
+    referral_balance: { type: DataTypes.FLOAT, defaultValue: 0 },
   },
   {
     sequelize,
     modelName: 'User',
-    tableName: 'users',
+    tableName: 'users', // Optionnel : correspond à la table SQL
+    timestamps: true,   // Active les colonnes createdAt et updatedAt
   }
 );
 
