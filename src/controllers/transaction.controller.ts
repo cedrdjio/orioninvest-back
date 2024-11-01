@@ -43,7 +43,6 @@ export class TransactionController {
     }
   }
 
-  // Achat d'un package (crée une transaction)
   async purchasePackage(req: Request, res: Response, next: NextFunction): Promise<void> {
     // @ts-ignore
     const { packageId } = req.body;
