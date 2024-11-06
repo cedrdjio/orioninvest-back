@@ -55,11 +55,11 @@ User.init(
     referral_code: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true
     },
     referrer_id: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     balance: { type: DataTypes.FLOAT, defaultValue: 0 },
     referral_balance: { type: DataTypes.FLOAT, defaultValue: 0 },

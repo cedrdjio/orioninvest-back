@@ -9,7 +9,7 @@ export class AuthController {
       const user = await authService.register(data);
       res.status(201).json(user);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({error});
     }
   }
 
