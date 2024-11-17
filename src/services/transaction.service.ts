@@ -1,18 +1,74 @@
-import Transaction from '../models/Transaction';
-import User from '../models/User';
-import Package from '../models/Package';
+import Transaction from "../models/Transaction";
+import User from "../models/User";
+import Package from "../models/Package";
 
 export class TransactionService {
-  // Dépôt de fonds
-  static async deposit(userEmail: string, amount: number, operatorNumber: string, operatorTransactionId: string) {
+
+  // Initialiser une transaction de dépôt
+  static async initDepositTransaction(amount: number,operatorTransactionId: string) {
+    // Vérification de l'existence d'une transaction similaire
+    const existingTransaction = await Transaction.findOne({
+      where: { operatorTransactionId, type: "deposit" },
+    });
+    if (existingTransaction) {
+      throw new Error("Une transaction avec cet ID d'opérateur existe déjà.");
+    }
+    // Création de la transaction avec un statut `pending`
+    const transaction = await Transaction.create({
+      type: "deposit",
+      amount: amount, 
+      status: "pending",
+      operatorTransactionId,
+    });
+    return transaction;
+  }
+
+  // Confirmer une transaction de dépôt
+  static async confirmDepositTransaction( userEmail: string,operatorTransactionId: string,amount: number,operatorNumber: string) {
     const user = await User.findOne({ where: { email: userEmail } });
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('Utilisateur non trouvé.');
+    }
+    // Recherche de la transaction par son `operatorTransactionId`
+    const transaction = await Transaction.findOne({
+      where: { operatorTransactionId, type: "deposit" },
+    });
+    if (!transaction) {
+      throw new Error("Transaction non trouvée.Veuiller reessailler plutard svp ou contacter le service");
+    }
+    // Vérification du statut
+    if (transaction.status === "failed") {
+      throw new Error("Impossible de confirmer une transaction échouée.");
+    }
+    if (transaction.status === "completed") {
+      throw new Error("Cette transaction a déjà été confirmée.");
+    }
+    // Mise à jour des informations de la transaction
+    transaction.userId=user.id,
+    transaction.operatorNumber = operatorNumber;
+    transaction.status = "completed";
+    await transaction.save();
+    // Mise à jour du solde de l'utilisateur
+    user.balance += amount;
+    await user.save();
+    return transaction;
+  }
+
+  // Dépôt de fonds
+  static async deposit(
+    userEmail: string,
+    amount: number,
+    operatorNumber: string,
+    operatorTransactionId: string
+  ) {
+    const user = await User.findOne({ where: { email: userEmail } });
+    if (!user) {
+      throw new Error("User not found");
     }
 
     const transaction = await Transaction.create({
       userId: user.id,
-      type: 'deposit',
+      type: "deposit",
       amount,
       operatorNumber,
       operatorTransactionId,
@@ -26,10 +82,14 @@ export class TransactionService {
   }
 
   // Retrait de fonds
-  static async withdraw(userEmail: string, amount: number, operatorNumber: string) {
+  static async withdraw(
+    userEmail: string,
+    amount: number,
+    operatorNumber: string
+  ) {
     // Validation des paramètres d'entrée
     if (!amount || amount <= 0) {
-      throw new Error('Le montant du retrait doit être supérieur à zéro.');
+      throw new Error("Le montant du retrait doit être supérieur à zéro.");
     }
     // Récupération de l'utilisateur par email
     const user = await User.findOne({ where: { email: userEmail } });
@@ -40,7 +100,7 @@ export class TransactionService {
     const purchaseExists = await Transaction.findOne({
       where: {
         userId: user.id,
-        type: 'package_purchase',
+        type: "package_purchase",
       },
     });
     if (!purchaseExists) {
@@ -56,7 +116,7 @@ export class TransactionService {
     // Création de la transaction de retrait
     const transaction = await Transaction.create({
       userId: user.id,
-      type: 'withdraw',
+      type: "withdraw",
       amount,
       operatorNumber,
     });
@@ -77,14 +137,14 @@ export class TransactionService {
     const packageToBuy = await Package.findByPk(packageId);
 
     if (!user || !packageToBuy) {
-      throw new Error('User or package not found');
+      throw new Error("User or package not found");
     }
     if (user.balance < packageToBuy.price) {
-      throw new Error('Insufficient funds');
+      throw new Error("Insufficient funds");
     }
     const transaction = await Transaction.create({
       userId: user.id,
-      type: 'purchase',
+      type: "purchase",
       amount: packageToBuy.price,
       packageId: packageToBuy.id,
     });
@@ -100,10 +160,12 @@ export class TransactionService {
   static async transactionHistory(userEmail: string) {
     const user = await User.findOne({ where: { email: userEmail } });
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
-    const transactions = await Transaction.findAll({ where: { userId: user.id } });
+    const transactions = await Transaction.findAll({
+      where: { userId: user.id },
+    });
     return transactions;
   }
 }

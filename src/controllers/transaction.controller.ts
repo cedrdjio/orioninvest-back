@@ -3,6 +3,41 @@ import { TransactionService } from '../services/transaction.service';
 
 export class TransactionController {
 
+   async initDepositTransaction(req: Request, res: Response): Promise<void> {
+    try {
+      const { amount, operatorTransactionId } = req.body;
+      if (!amount || !operatorTransactionId) {
+         res.status(400).json({ error: "Les champs amount et operatorTransactionId sont requis." });
+      }
+      const transaction = await TransactionService.initDepositTransaction(amount, operatorTransactionId);
+       res.status(201).json({ message: "Transaction initiée avec succès.", transaction });
+    } catch (error: any) {
+       res.status(400).json({ error: error.message });
+    }
+  }
+
+  // Confirmer une transaction de dépôt
+   async confirmDepositTransaction(req: Request, res: Response): Promise<void> {
+    try {
+      const { operatorTransactionId, amount, operatorNumber } = req.body;
+      // @ts-ignore
+      const userEmail = req.user.email; // Assurez-vous que l'email de l'utilisateur est ajouté au middleware auth
+      if (!operatorTransactionId || !amount || !operatorNumber) {
+         res.status(400).json({ error: "Les champs operatorTransactionId, amount et operatorNumber sont requis." });
+      }
+      const transaction = await TransactionService.confirmDepositTransaction(
+        userEmail,
+        operatorTransactionId,
+        amount,
+        operatorNumber
+      );
+       res.status(200).json({ message: "Transaction confirmée avec succès.", transaction });
+    } catch (error: any) {
+       res.status(400).json({ error: error.message });
+    }
+  }
+
+
   // Dépôt de fonds
   async deposit(req: Request, res: Response, next: NextFunction): Promise<void> {
     // @ts-ignore

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from './controllers/auth.controller';
-import VerifiedChainController from './controllers/VerifiedChainController';
+import VerifiedChainController from './controllers/VerifiedChain.controller';
 import { PackageController } from './controllers/package.controller';
 import { TransactionController } from './controllers/transaction.controller';
 import { authenticateToken } from './middlewares/auth.middleware';
@@ -179,6 +179,72 @@ router.get('/packages/list', authenticateToken, packageController.listPackages);
  *         description: Deposit successful
  */
 router.post('/transaction/deposit', authenticateToken, transactionController.deposit);
+/**
+ * @swagger
+ * /transaction/init-deposit:
+ *   post:
+ *     summary: Initier une transaction de dépôt
+ *     tags: [Transaction]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 description: Montant à déposer.
+ *                 example: 1000
+ *               operatorTransactionId:
+ *                 type: string
+ *                 description: Identifiant unique de la transaction opérateur.
+ *                 example: "OP123456789"
+ *     responses:
+ *       201:
+ *         description: Transaction initiée avec succès
+ *       400:
+ *         description: Erreur de validation ou autre problème
+ */
+router.post('/transaction/init-deposit', transactionController.initDepositTransaction);
+
+/**
+ * @swagger
+ * /transaction/confirm-deposit:
+ *   post:
+ *     summary: Confirmer une transaction de dépôt
+ *     tags: [Transaction]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               operatorTransactionId:
+ *                 type: string
+ *                 description: Identifiant unique de la transaction opérateur.
+ *                 example: "OP123456789"
+ *               amount:
+ *                 type: number
+ *                 description: Montant de la transaction.
+ *                 example: 1000
+ *               operatorNumber:
+ *                 type: string
+ *                 description: Numéro de l'opérateur.
+ *                 example: "12345678"
+ *     responses:
+ *       200:
+ *         description: Transaction confirmée avec succès
+ *       400:
+ *         description: Erreur de validation ou autre problème
+ */
+router.post('/transaction/confirm-deposit', authenticateToken, transactionController.confirmDepositTransaction);
+
+
+
 /**
  * @swagger
  * /transactions/purchase-package:

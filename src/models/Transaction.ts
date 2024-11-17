@@ -27,7 +27,7 @@ Transaction.init(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: User,
         key: 'id',

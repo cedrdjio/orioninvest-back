@@ -7,6 +7,7 @@ import Package from './models/Package';
 import Transaction from './models/Transaction';
 import swaggerApp from './swagger'; 
 import createDefaultUser from './config/baseData';
+import VerifiedChain from './models/VerifiedChain';
 dotenv.config();
 
 const app: Application = express();
@@ -28,6 +29,7 @@ const startServer = async () => {
     // await createDefaultUser();
     await Package.sync({ force: false });
     await Transaction.sync({ force: false });
+    await VerifiedChain.sync({ force: false });
     console.log('All models have been synchronized successfully.');
     console.log('Modèles synchronisés.');
 

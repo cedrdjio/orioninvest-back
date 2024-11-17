@@ -12,12 +12,19 @@ interface VerifiedChainAttributes {
 interface VerifiedChainCreationAttributes extends Optional<VerifiedChainAttributes, 'id' | 'isVerified'> {}
 
 // Définition du modèle
-class VerifiedChain
-  extends Model<VerifiedChainAttributes, VerifiedChainCreationAttributes>
-  implements VerifiedChainAttributes {
+class VerifiedChain extends Model<VerifiedChainAttributes, VerifiedChainCreationAttributes> implements VerifiedChainAttributes {
   public id!: number;
   public chain!: string;
   public isVerified!: boolean;
+
+  // Méthode pour représenter l'objet sous forme de chaîne (facultatif)
+  public toJSON(): VerifiedChainAttributes {
+    return {
+      id: this.id,
+      chain: this.chain,
+      isVerified: this.isVerified,
+    };
+  }
 }
 
 VerifiedChain.init(
@@ -34,10 +41,10 @@ VerifiedChain.init(
       validate: {
         isCorrectFormat(value: string) {
           // Expression régulière pour les formats
-          const mtnRegex1 = /^\d{10}$/; // Exemple : 10228436694 ou 9366396580
+          const mtnRegex = /^\d{10}$/; // Exemple : 10228436694 ou 9366396580
           const orangeRegex = /^[A-Z]{2}\d{6}\.\d{4}\.A\d{5}$/; // Exemple : XX241011.0939.A27968
 
-          if (!mtnRegex1.test(value) && !orangeRegex.test(value)) {
+          if (!mtnRegex.test(value) && !orangeRegex.test(value)) {
             throw new Error(
               "La chaîne doit respecter l'un des formats suivants : 10 chiffres pour MTN ou '<Préfixe><6 chiffres>.<4 chiffres>.A<5 chiffres>' pour Orange."
             );
