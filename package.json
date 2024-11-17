@@ -29,6 +29,7 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.3",
+    "orioninvest-back": "file:",
     "sequelize": "^6.37.4",
     "sequelize-cli": "^6.6.2",
     "swagger-jsdoc": "^6.2.8",

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from './controllers/auth.controller';
+import VerifiedChainController from './controllers/VerifiedChainController';
 import { PackageController } from './controllers/package.controller';
 import { TransactionController } from './controllers/transaction.controller';
 import { authenticateToken } from './middlewares/auth.middleware';
@@ -327,42 +328,110 @@ router.get('/transaction/history', authenticateToken, transactionController.tran
   *       404:
   *         description: Utilisateur non trouvé
   */
-router.get('/user/profile', authenticateToken, UserController.getProfile);
 /**
-  * @swagger
-  * user/referrals:
-  *   get:
-  *     summary: Récupérer la liste des filleuls
-  *     tags: [User]
-  *     security:
-*       bearerAuth:
-*         type: http
-*         scheme: bearer
-*         bearerFormat: JWT
-  *     responses:
-  *       200:
-  *         description: Liste des filleuls récupérée avec succès
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                 type: object
-  *                 properties:
-  *                   id:
-  *                     type: integer
-  *                   name:
-  *                     type: string
-  *                   phone_number:
-  *                     type: string
-  *                   email:
-  *                     type: string
-  *                   createdAt:
-  *                     type: string
-  *                     format: date-time
-  *       400:
-  *         description: Erreur système
-  */
+ * @swagger
+ * /verifiedChain:
+ *   post:
+ *     summary: Crée une nouvelle chaîne vérifiée
+ *     description: Cette route permet de créer une nouvelle chaîne vérifiée en fournissant une chaîne valide.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chain:
+ *                 type: string
+ *                 example: '10228436694'
+ *     responses:
+ *       201:
+ *         description: Chaîne vérifiée créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 chain:
+ *                   type: string
+ *                   example: '10228436694'
+ *       400:
+ *         description: Erreur de validation ou d'entrée
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post('/verifiedChain', VerifiedChainController.createVerifiedChain);
+
+/**
+ * @swagger
+ * /verifiedChains:
+ *   get:
+ *     summary: Récupère toutes les chaînes vérifiées
+ *     description: Cette route permet de récupérer toutes les chaînes vérifiées.
+ *     responses:
+ *       200:
+ *         description: Liste des chaînes vérifiées
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   chain:
+ *                     type: string
+ *                     example: '10228436694'
+ *                   isVerified:
+ *                     type: boolean
+ *                     example: true
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/verifiedChains', VerifiedChainController.getAllVerifiedChains);
+
+/**
+ * @swagger
+ * /verifiedChain/{id}:
+ *   get:
+ *     summary: Récupère une chaîne vérifiée par son ID
+ *     description: Cette route permet de récupérer une chaîne vérifiée en utilisant son ID unique.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la chaîne vérifiée
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Chaîne vérifiée trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 chain:
+ *                   type: string
+ *                   example: '10228436694'
+ *       404:
+ *         description: Chaîne vérifiée non trouvée
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/verifiedChain/:id', VerifiedChainController.getVerifiedChainById);
+
+
+
 router.get('/user/referrals', authenticateToken, UserController.getReferrals);
 
 export default router;
