@@ -2,6 +2,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import sequelize from './config/database';
 import User from './models/User';
+const cors = require('cors');
 import router from './routes';
 import Package from './models/Package';
 import Transaction from './models/Transaction';
@@ -12,6 +13,13 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
+
+// Middleware pour gérer les CORS
+app.use(cors({
+    origin: '*', // Permet les requêtes depuis n'importe quelle origine
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Méthodes HTTP autorisées
+    allowedHeaders: ['Content-Type', 'Authorization'] // En-têtes autorisés
+}));
 
 app.use(express.json());
 app.use(router);
