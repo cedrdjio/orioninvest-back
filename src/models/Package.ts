@@ -7,6 +7,7 @@ class Package extends Model {
   public name!: string;
   public description!: string;
   public price!: number;
+  public image!: string; // Nouveau champ pour l'URL de l'image
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -50,11 +51,20 @@ Package.init(
         },
       },
     },
+    image: {
+      type: DataTypes.STRING, // Stocke l'URL de l'image
+      allowNull: true,
+      validate: {
+        isUrl: {
+          msg: 'L\'image doit être une URL valide',
+        },
+      },
+    },
   },
   {
     sequelize,
     modelName: 'Packages',
-    timestamps: true,   // Active les colonnes createdAt et updatedAt
+    timestamps: true,
     tableName: 'packages',
   }
 );
