@@ -394,7 +394,7 @@ router.get('/transaction/history', authenticateToken, transactionController.tran
   *       404:
   *         description: Utilisateur non trouvé
   */
-router.get('/user/profile', authenticateToken, usercontroller.getProfile);
+router.get('/user/profile', authenticateToken, UserController.getProfile);
 /**
  * @swagger
  * /verifiedChain:
