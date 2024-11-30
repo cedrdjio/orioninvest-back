@@ -1,7 +1,7 @@
 import Package from '../models/Package';
 
 export class PackageService {
-  async createPackage(data: { name: string; description: string; price: number }) {
+  async createPackage(data: { name: string; description: string; price: number; image: string }) {
     return await Package.create(data);
   }
 

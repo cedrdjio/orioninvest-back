@@ -5,10 +5,10 @@ import Package from '../models/Package';
 export class PackageController {
   // Create a new package
   async createPackage(req: Request, res: Response) {
-    const { name, description, price } = req.body;
+    const { name, description, price , image } = req.body;
 
     try {
-      const packageItem = await Package.create({ name, description, price });
+      const packageItem = await Package.create({ name, description, price, image });
       res.status(201).json(packageItem);
     } catch (error) {
       console.error(error);
