@@ -1,18 +1,20 @@
-// src/models/Package.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 
 class Package extends Model {
   public id!: number;
   public name!: string;
-  public description!: string;
   public price!: number;
-  public interestRate!: number; // Nouveau champ pour les intérêts
-  public duration!: number; // Durée du projet (existant)
+  public interestRate!: number;
+  public duration!: number;
+  public niche?: string; // Ajout du champ niche
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
 }
+
+
 
 Package.init(
   {
@@ -24,61 +26,29 @@ Package.init(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Le nom du package ne peut pas être vide',
-        },
-      },
-    },
-    description: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'La description du package ne peut pas être vide',
-        },
-      },
     },
     price: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.FLOAT,
       allowNull: false,
-      validate: {
-        isDecimal: {
-          msg: 'Le prix doit être un nombre décimal valide',
-        },
-        min: {
-          args: [0],
-          msg: 'Le prix doit être supérieur ou égal à 0',
-        },
-      },
     },
     interestRate: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      defaultValue: 0, // Taux d'intérêt par défaut : 0
-      validate: {
-        min: {
-          args: [0],
-          msg: 'Le taux d\'intérêt doit être supérieur ou égal à 0',
-        },
-      },
     },
     duration: {
-      type: DataTypes.INTEGER, // Durée en jours
+      type: DataTypes.INTEGER,
       allowNull: false,
-      validate: {
-        min: {
-          args: [1],
-          msg: 'La durée doit être d\'au moins 1 jour',
-        },
-      },
+    },
+    niche: { // Nouveau champ
+      type: DataTypes.STRING,
+      allowNull: true, // Autorise les valeurs nulles
     },
   },
   {
     sequelize,
     modelName: 'Package',
-    timestamps: true,
     tableName: 'packages',
+    timestamps: true, // Ajoute les champs createdAt et updatedAt
   }
 );
 
