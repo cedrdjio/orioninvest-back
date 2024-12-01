@@ -7,7 +7,8 @@ class Package extends Model {
   public name!: string;
   public description!: string;
   public price!: number;
-  public duration!: number; // Durée en jours
+  public interestRate!: number; // Nouveau champ pour les intérêts
+  public duration!: number; // Durée du projet (existant)
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -51,13 +52,24 @@ Package.init(
         },
       },
     },
+    interestRate: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0, // Taux d'intérêt par défaut : 0
+      validate: {
+        min: {
+          args: [0],
+          msg: 'Le taux d\'intérêt doit être supérieur ou égal à 0',
+        },
+      },
+    },
     duration: {
       type: DataTypes.INTEGER, // Durée en jours
       allowNull: false,
       validate: {
         min: {
           args: [1],
-          msg: 'La durée doit être au moins 1 jour',
+          msg: 'La durée doit être d\'au moins 1 jour',
         },
       },
     },

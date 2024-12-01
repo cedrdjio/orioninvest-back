@@ -23,6 +23,11 @@ export class TransactionService {
     return transaction;
   }
 
+
+  //---------------------------------------------------------------------------------------
+
+
+
   // Confirmer une transaction de dépôt
   static async confirmDepositTransaction( userEmail: string,operatorTransactionId: string,amount: number,operatorNumber: string) {
     const user = await User.findOne({ where: { email: userEmail } });
@@ -54,6 +59,12 @@ export class TransactionService {
     return transaction;
   }
 
+
+    //---------------------------------------------------------------------------------------
+
+
+
+
   // Dépôt de fonds
   static async deposit(
     userEmail: string,
@@ -80,6 +91,13 @@ export class TransactionService {
 
     return transaction;
   }
+
+    //---------------------------------------------------------------------------------------
+
+
+
+
+
 
   // Retrait de fonds
   static async withdraw(
@@ -131,30 +149,85 @@ export class TransactionService {
     await user.save();
     return transaction;
   }
-  // Achat d'un package (crée une transaction)
-  static async purchasePackage(userEmail: string, packageId: number) {
-    const user = await User.findOne({ where: { email: userEmail } });
-    const packageToBuy = await Package.findByPk(packageId);
 
-    if (!user || !packageToBuy) {
-      throw new Error("User or package not found");
-    }
-    if (user.balance < packageToBuy.price) {
-      throw new Error("Insufficient funds");
-    }
-    const transaction = await Transaction.create({
-      userId: user.id,
-      type: "purchase",
-      amount: packageToBuy.price,
-      packageId: packageToBuy.id,
-    });
+    //---------------------------------------------------------------------------------------
 
-    // Déduire le prix du package du solde de l'utilisateur
-    user.balance -= packageToBuy.price;
-    await user.save();
 
-    return transaction;
+
+
+  // Achat d'un package avec distribution des commissions pour les parrains
+static async purchasePackage(userEmail: string, packageId: number) {
+  // Récupérer l'utilisateur et le package
+  const user = await User.findOne({ where: { email: userEmail } });
+  const packageToBuy = await Package.findByPk(packageId);
+
+  if (!user || !packageToBuy) {
+    throw new Error("User or package not found");
   }
+
+  // Vérifier si l'utilisateur a suffisamment de fonds
+  if (user.balance < packageToBuy.price) {
+    throw new Error("Insufficient funds");
+  }
+
+  // Créer une transaction pour l'achat
+  const transaction = await Transaction.create({
+    userId: user.id,
+    type: "package_purchase",
+    amount: packageToBuy.price,
+    packageId: packageToBuy.id,
+    status: "completed"
+  });
+
+  // Déduire le prix du package du solde de l'utilisateur
+  user.balance -= packageToBuy.price;
+  await user.save();
+
+  // Calculer la commission du parrain direct
+  const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
+  if (directReferrer) {
+    const directReferrerCommission = (packageToBuy.price * 10) / 100;
+    directReferrer.balance += directReferrerCommission;
+    await directReferrer.save();
+
+    // Créer une transaction pour le paiement de la commission du parrain direct
+    await Transaction.create({
+      userId: directReferrer.id,
+      type: "commission",
+      amount: directReferrerCommission,
+      packageId: packageToBuy.id,
+      status: "completed"
+    });
+  }
+
+  // Vérifier le parrain du parrain (grand-parent)
+  if (directReferrer && directReferrer.referrer_id) {
+    const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
+    if (grandParentReferrer) {
+      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200; // Divisé par 2
+      grandParentReferrer.balance += grandParentReferrerCommission;
+      await grandParentReferrer.save();
+
+      // Créer une transaction pour le paiement de la commission du grand-parent
+      await Transaction.create({
+        userId: grandParentReferrer.id,
+        type: "commission",
+        amount: grandParentReferrerCommission,
+        packageId: packageToBuy.id,
+        status: "completed"
+      });
+    }
+  }
+
+  return transaction;
+}
+
+
+    //---------------------------------------------------------------------------------------
+
+
+
+
 
   // Historique des transactions
   static async transactionHistory(userEmail: string) {
@@ -168,4 +241,9 @@ export class TransactionService {
     });
     return transactions;
   }
+
+  //-------------------------------------------------------------------------------------------
+
+
+  
 }
