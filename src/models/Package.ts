@@ -8,11 +8,11 @@ class Package extends Model {
   public interestRate!: number;
   public duration!: number;
   public niche?: string; // Champ niche
-  public description?: string; // Nouveau champ description
+  public description?: string; // Champ description
+  public image?: string; // Nouveau champ image
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-
 }
 
 Package.init(
@@ -42,9 +42,13 @@ Package.init(
       type: DataTypes.STRING,
       allowNull: true, // Autorise la valeur null
     },
-    description: { // Nouveau champ description
+    description: { // Champ description
       type: DataTypes.STRING,
       allowNull: true, // Autorise la valeur null
+    },
+    image: { // Nouveau champ image
+      type: DataTypes.STRING,
+      allowNull: true, // Autorise la valeur null (pour les packages sans image)
     },
   },
   {
