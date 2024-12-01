@@ -7,14 +7,13 @@ class Package extends Model {
   public price!: number;
   public interestRate!: number;
   public duration!: number;
-  public niche?: string; // Ajout du champ niche
+  public niche?: string; // Champ niche
+  public description?: string; // Nouveau champ description
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
 }
-
-
 
 Package.init(
   {
@@ -39,9 +38,13 @@ Package.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    niche: { // Nouveau champ
+    niche: {
       type: DataTypes.STRING,
-      allowNull: true, // Autorise les valeurs nulles
+      allowNull: true, // Autorise la valeur null
+    },
+    description: { // Nouveau champ description
+      type: DataTypes.STRING,
+      allowNull: true, // Autorise la valeur null
     },
   },
   {
