@@ -312,7 +312,7 @@ router.post('/transaction/confirm-deposit', authenticateToken, transactionContro
  *                   type: string
  *                   description: Error message.
  */
-router.post('/transaction/purchase-package', authenticateToken, transactionController.withdraw);
+router.post('/transaction/purchase-package', authenticateToken, transactionController.purchasePackage);
 
 /**
  * @swagger
