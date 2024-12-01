@@ -7,7 +7,7 @@ class Package extends Model {
   public name!: string;
   public description!: string;
   public price!: number;
-  public image!: string; // Nouveau champ pour l'URL de l'image
+  public duration!: number; // Durée en jours
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -51,19 +51,20 @@ Package.init(
         },
       },
     },
-    image: {
-      type: DataTypes.STRING, // Stocke l'URL de l'image
-      allowNull: true,
+    duration: {
+      type: DataTypes.INTEGER, // Durée en jours
+      allowNull: false,
       validate: {
-        isUrl: {
-          msg: 'L\'image doit être une URL valide',
+        min: {
+          args: [1],
+          msg: 'La durée doit être au moins 1 jour',
         },
       },
     },
   },
   {
     sequelize,
-    modelName: 'Packages',
+    modelName: 'Package',
     timestamps: true,
     tableName: 'packages',
   }
