@@ -135,6 +135,7 @@ router.post('/auth/login', authController.signin);
  */
 router.post('/packages/create', packageController.createPackage);
 
+
 /**
  * @swagger
  * /packages/list:
@@ -151,6 +152,7 @@ router.post('/packages/create', packageController.createPackage);
  *         description: A list of packages
  */
 router.get('/packages/list', packageController.listPackages);
+router.get('/packages/list/:id', packageController.getPackageById);
 
 /**
  * @swagger
