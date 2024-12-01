@@ -133,7 +133,7 @@ router.post('/auth/login', authController.signin);
  *       201:
  *         description: Package created successfully
  */
-router.post('/packages/create', authenticateToken, packageController.createPackage);
+router.post('/packages/create', packageController.createPackage);
 
 /**
  * @swagger
@@ -150,7 +150,7 @@ router.post('/packages/create', authenticateToken, packageController.createPacka
  *       200:
  *         description: A list of packages
  */
-router.get('/packages/list', authenticateToken, packageController.listPackages);
+router.get('/packages/list', packageController.listPackages);
 
 /**
  * @swagger
