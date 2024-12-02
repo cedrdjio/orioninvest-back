@@ -1,6 +1,7 @@
 import Transaction from "../models/Transaction";
 import User from "../models/User";
 import Package from "../models/Package";
+import { MessageEvent } from "http";
 
 export class TransactionService {
 
@@ -105,10 +106,11 @@ export class TransactionService {
     amount: number,
     operatorNumber: string
   ) {
+
     // Validation des paramètres d'entrée
-    if (!amount || amount <= 0) {
-      throw new Error("Le montant du retrait doit être supérieur à zéro.");
-    }
+    //if (!amount || amount <= 0) {
+     // throw new Error("Le montant du retrait doit être supérieur à zéro.");
+   // }
     // Récupération de l'utilisateur par email
     const user = await User.findOne({ where: { email: userEmail } });
     if (!user) {
