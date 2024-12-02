@@ -134,9 +134,10 @@ export class TransactionService {
     // Création de la transaction de retrait
     const transaction = await Transaction.create({
       userId: user.id,
-      type: "withdraw",
+      type: "withdrawal",
       amount,
       operatorNumber,
+      status: 'pending'
     });
     // Déduit le montant en priorité de `balance`, puis de `referral_balance` si nécessaire
     if (user.balance >= amount) {
