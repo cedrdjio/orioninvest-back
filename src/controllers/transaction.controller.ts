@@ -90,7 +90,7 @@ export class TransactionController {
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
+        res.status(417).json({ message: error.message });
       } else {
         res.status(500).json({ message: 'An unexpected error occurred' });
       }
