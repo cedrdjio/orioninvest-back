@@ -105,6 +105,8 @@ export class TransactionService {
     amount: number,
     operatorNumber: string
   ) {
+
+    console.log(amount);
     // Validation des paramètres d'entrée
     if (!amount || amount <= 0) {
       throw new Error("Le montant du retrait doit être supérieur à zéro.");
