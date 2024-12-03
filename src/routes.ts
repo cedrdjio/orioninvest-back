@@ -504,4 +504,11 @@ router.get('/verifiedChain/:id', VerifiedChainController.getVerifiedChainById);
 router.get('/user/referrals', authenticateToken, UserController.getReferrals);
 router.get('/pending', transactionController.getPendingTransactions);
 
+//Routes pour marquer comme completed
+router.put('/transaction/:transactionId/completed', transactionController.markTransactionAsCompleted);
+//Routes pour marquer comme failed
+router.put('/transaction/:transactionId/failed', transactionController.markTransactionAsFailed);
+
+
+
 export default router;

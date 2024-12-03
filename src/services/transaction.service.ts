@@ -270,5 +270,36 @@ static async purchasePackage(userEmail: string, packageId: number) {
     }
   }
 
+  //--------------------------------------------------------------------------------------------
+
+  // Fonction pour marquer la transaction comme "complétée"
+  static async markTransactionAsCompleted(transactionId: number) {
+    const transaction = await Transaction.findByPk(transactionId);
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    // Mise à jour du statut à "completed"
+    transaction.status = 'completed';
+    await transaction.save(); // Sauvegarde la transaction mise à jour
+    return transaction;
+  }
+
+    //--------------------------------------------------------------------------------------------
+
+
+// Fonction pour marquer la transaction comme "échec"
+static async markTransactionAsFailed(transactionId: number) {
+  const transaction = await Transaction.findByPk(transactionId);
+  if (!transaction) {
+    throw new Error("Transaction not found");
+  }
+
+  // Mise à jour du statut à "failed"
+  transaction.status = 'failed';
+  await transaction.save(); // Sauvegarde la transaction mise à jour
+  return transaction;
+}
+
   
 }

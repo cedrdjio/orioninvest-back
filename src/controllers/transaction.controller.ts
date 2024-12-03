@@ -182,5 +182,50 @@ async getPendingTransactions(req: Request, res: Response, next: NextFunction): P
   }
 }
 
+//-------------------------------------------------------------------------
+
+
+
+// Route pour marquer une transaction comme "complétée"
+// Marquer une transaction comme "complétée"
+async markTransactionAsCompleted(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { transactionId } = req.params;
+    const updatedTransaction = await TransactionService.markTransactionAsCompleted(Number(transactionId));
+    res.status(200).json({
+      message: 'Transaction marked as completed successfully',
+      transaction: updatedTransaction,
+    });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unexpected error occurred' });
+    }
+  }
+}
+
+
+//-------------------------------------------------------------------------
+
+// Marquer une transaction comme "échec"
+async markTransactionAsFailed(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { transactionId } = req.params;
+    const updatedTransaction = await TransactionService.markTransactionAsFailed(Number(transactionId));
+    res.status(200).json({
+      message: 'Transaction marked as failed successfully',
+      transaction: updatedTransaction,
+    });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unexpected error occurred' });
+    }
+  }
+}
 
 }
