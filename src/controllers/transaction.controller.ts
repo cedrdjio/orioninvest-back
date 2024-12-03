@@ -5,16 +5,32 @@ export class TransactionController {
 
   async initDepositTransaction(req: Request, res: Response): Promise<void> {
     try {
-      const { amount, operatorTransactionId } = req.body;
-      if (!amount || !operatorTransactionId) {
-        res.status(400).json({ error: "Les champs amount et operatorTransactionId sont requis." });
+      const { amount, operatorTransactionId, userId } = req.body;
+  
+      // Vérification des champs requis
+      if (!amount || !operatorTransactionId || !userId) {
+        res.status(400).json({
+          error: "Les champs amount, operatorTransactionId et userId sont requis.",
+        });
+        return;
       }
-      const transaction = await TransactionService.initDepositTransaction(amount, operatorTransactionId);
-      res.status(201).json({ message: "Transaction initiée avec succès.", transaction });
+  
+      // Appel au service pour initialiser la transaction
+      const transaction = await TransactionService.initDepositTransaction(
+        amount,
+        operatorTransactionId,
+        userId
+      );
+  
+      res.status(201).json({
+        message: "Transaction initiée avec succès.",
+        transaction,
+      });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   }
+  
 
   // Confirmer une transaction de dépôt
   async confirmDepositTransaction(req: Request, res: Response): Promise<void> {

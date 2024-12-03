@@ -6,7 +6,11 @@ import { MessageEvent } from "http";
 export class TransactionService {
 
   // Initialiser une transaction de dépôt
-  static async initDepositTransaction(amount: number,operatorTransactionId: string) {
+  static async initDepositTransaction(
+    amount: number,
+    operatorTransactionId: string,
+    userId: number
+  ) {
     // Vérification de l'existence d'une transaction similaire
     const existingTransaction = await Transaction.findOne({
       where: { operatorTransactionId, type: "deposit" },
@@ -14,16 +18,27 @@ export class TransactionService {
     if (existingTransaction) {
       throw new Error("Une transaction avec cet ID d'opérateur existe déjà.");
     }
+  
+    // Vérification de l'existence de l'utilisateur
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new Error("Utilisateur introuvable.");
+    }
+  
     // Création de la transaction avec un statut `pending`
     const transaction = await Transaction.create({
+      userId,
+      name : user.name,
+      operatorNumber : user.phone_number,
       type: "deposit",
-      amount: amount, 
+      amount,
       status: "pending",
       operatorTransactionId,
     });
+  
     return transaction;
   }
-
+  
 
   //---------------------------------------------------------------------------------------
 
