@@ -248,16 +248,23 @@ static async purchasePackage(userEmail: string, packageId: number) {
 
   //-------------------------------------------------------------------------------------------
 
-  // Récupérer les transactions en attente de type 'deposit' ou 'withdrawal'
+  // Récupérer les transactions en attente avec le nom de l'utilisateur
   public static async getPendingTransactions(): Promise<any> {
     try {
-      // Chercher les transactions en statut 'pending' et de type 'deposit' ou 'withdrawal'
-      return await Transaction.findAll({
+      // Recherche des transactions avec une jointure sur la table User pour obtenir le nom de l'utilisateur
+      const transactions = await Transaction.findAll({
         where: {
           status: 'pending',
           type: ['deposit', 'withdrawal'],
         },
+        include: [
+          {
+            model: User,
+            attributes: ['name'],  // Inclure uniquement le champ 'name' du modèle User
+          }
+        ]
       });
+      return transactions;  // Les transactions contiendront maintenant le nom de l'utilisateur
     } catch (error) {
       throw new Error('Erreur lors de la récupération des transactions en attente');
     }
