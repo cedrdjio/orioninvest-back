@@ -111,6 +111,7 @@ export class TransactionService {
     //if (!amount || amount <= 0) {
      // throw new Error("Le montant du retrait doit être supérieur à zéro.");
    // }
+   
     // Récupération de l'utilisateur par email
     const user = await User.findOne({ where: { email: userEmail } });
     if (!user) {
