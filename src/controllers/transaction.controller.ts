@@ -3,27 +3,27 @@ import { TransactionService } from '../services/transaction.service';
 
 export class TransactionController {
 
-   async initDepositTransaction(req: Request, res: Response): Promise<void> {
+  async initDepositTransaction(req: Request, res: Response): Promise<void> {
     try {
       const { amount, operatorTransactionId } = req.body;
       if (!amount || !operatorTransactionId) {
-         res.status(400).json({ error: "Les champs amount et operatorTransactionId sont requis." });
+        res.status(400).json({ error: "Les champs amount et operatorTransactionId sont requis." });
       }
       const transaction = await TransactionService.initDepositTransaction(amount, operatorTransactionId);
-       res.status(201).json({ message: "Transaction initiée avec succès.", transaction });
+      res.status(201).json({ message: "Transaction initiée avec succès.", transaction });
     } catch (error: any) {
-       res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message });
     }
   }
 
   // Confirmer une transaction de dépôt
-   async confirmDepositTransaction(req: Request, res: Response): Promise<void> {
+  async confirmDepositTransaction(req: Request, res: Response): Promise<void> {
     try {
       const { operatorTransactionId, amount, operatorNumber } = req.body;
       // @ts-ignore
       const userEmail = req.user.email; // Assurez-vous que l'email de l'utilisateur est ajouté au middleware auth
       if (!operatorTransactionId || !amount || !operatorNumber) {
-         res.status(400).json({ error: "Les champs operatorTransactionId, amount et operatorNumber sont requis." });
+        res.status(400).json({ error: "Les champs operatorTransactionId, amount et operatorNumber sont requis." });
       }
       const transaction = await TransactionService.confirmDepositTransaction(
         userEmail,
@@ -31,9 +31,9 @@ export class TransactionController {
         amount,
         operatorNumber
       );
-       res.status(200).json({ message: "Transaction confirmée avec succès.", transaction });
+      res.status(200).json({ message: "Transaction confirmée avec succès.", transaction });
     } catch (error: any) {
-       res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message });
     }
   }
 
@@ -58,25 +58,73 @@ export class TransactionController {
     }
   }
 
-  // Retrait de fonds
-  async withdraw(req: Request, res: Response, next: NextFunction): Promise<void> {
-    // @ts-ignore
-    const { amount, operatorNumber } = req.user;
-    // @ts-ignore
-    const userEmail = req.user.email;
+  // // Retrait de fonds
+  // async withdraw(req: Request, res: Response, next: NextFunction): Promise<void> {
+  //   // @ts-ignore
+  //   const { amount, operatorNumber } = req.user;
+  //   // @ts-ignore
+  //   const userEmail = req.user.email;
 
+  //   try {
+  //     const transaction = await TransactionService.withdraw(userEmail, amount, operatorNumber);
+  //     res.status(201).json(transaction);
+  //   } catch (error) {
+  //     console.error(error);
+  //     if (error instanceof Error) {
+  //       res.status(400).json({ message: error.message });
+  //     } else {
+  //       res.status(500).json({ message: 'An unexpected error occurred' });
+  //     }
+  //   }
+  // }
+   async withdraw(req: Request, res: Response): Promise<void> {
     try {
-      const transaction = await TransactionService.withdraw(userEmail, amount, operatorNumber);
-      res.status(201).json(transaction);
-    } catch (error) {
-      console.error(error);
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'An unexpected error occurred' });
+     // @ts-ignore
+      const { email: userEmail } = req.user; // On suppose que l'email est extrait du token et injecté dans `req.user`.
+      const { amount, operatorNumber } = req.body;
+
+      // Vérification des paramètres requis
+      if (!userEmail || !amount || !operatorNumber) {
+        res.status(400).json({
+          message: "Les paramètres requis sont manquants.",
+        });
+        return;
       }
+
+      // Appel du service `withdraw`
+      const transaction = await TransactionService.withdraw(
+        userEmail,
+        amount,
+        operatorNumber
+      );
+
+      // Réponse en cas de succès
+      res.status(201).json({
+        // message: "Retrait effectué avec succès.",
+        transaction,
+      });
+    } catch (error: any) {
+      // Gestion des erreurs spécifiques
+      if (
+        [
+          "Le montant du retrait doit être supérieur à zéro.",
+          "Utilisateur non trouvé.",
+          "Vous devez effectuer un achat de package avant de pouvoir effectuer un retrait.",
+          "Fonds insuffisants pour effectuer le retrait.",
+        ].includes(error.message)
+      ) {
+        res.status(417).json({ message: error.message });
+        return;
+      }
+
+      // Gestion des erreurs générales
+      console.error("Erreur lors du retrait:", error);
+      res.status(500).json({
+        message: "Une erreur interne s'est produite.",
+      });
     }
   }
+
 
   async purchasePackage(req: Request, res: Response, next: NextFunction): Promise<void> {
     // @ts-ignore
