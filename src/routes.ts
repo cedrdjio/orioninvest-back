@@ -502,5 +502,6 @@ router.get('/verifiedChain/:id', VerifiedChainController.getVerifiedChainById);
 
 
 router.get('/user/referrals', authenticateToken, UserController.getReferrals);
+router.get('transaction/history/pending', transactionController.getPendingTransactions);
 
 export default router;

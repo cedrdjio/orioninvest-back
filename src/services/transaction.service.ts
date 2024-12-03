@@ -248,6 +248,20 @@ static async purchasePackage(userEmail: string, packageId: number) {
 
   //-------------------------------------------------------------------------------------------
 
+  // Récupérer les transactions en attente de type 'deposit' ou 'withdrawal'
+  public static async getPendingTransactions(): Promise<any> {
+    try {
+      // Chercher les transactions en statut 'pending' et de type 'deposit' ou 'withdrawal'
+      return await Transaction.findAll({
+        where: {
+          status: 'pending',
+          type: ['deposit', 'withdrawal'],
+        },
+      });
+    } catch (error) {
+      throw new Error('Erreur lors de la récupération des transactions en attente');
+    }
+  }
 
   
 }

@@ -162,4 +162,25 @@ export class TransactionController {
       }
     }
   }
+
+
+//-------------------------------------------------------------------------
+
+// Route pour récupérer les transactions en attente (pending) de type 'deposit' ou 'withdrawal'
+// Route pour récupérer les transactions en attente
+async getPendingTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const transactions = await TransactionService.getPendingTransactions();
+    res.status(200).json(transactions);  // Retourne les transactions au format JSON
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });  // Gère l'erreur avec un message précis
+    } else {
+      res.status(500).json({ message: 'Une erreur inattendue est survenue' });  // Gestion générique d'erreur
+    }
+  }
+}
+
+
 }
