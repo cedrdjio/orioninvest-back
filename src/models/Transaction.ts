@@ -16,7 +16,22 @@ class Transaction extends Model {
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+
+
+  public static async isTransactionIdValid(transactionId: string): Promise<boolean> {
+    const regex1 = /^CO\d{6}\.\d{4}\.[A-Z0-9]{6}$/;
+    const regex2 = /^\d{10,15}$/;
+    return regex1.test(transactionId) || regex2.test(transactionId);
+  }
+
+  public static async existsTransactionId(transactionId: string): Promise<boolean> {
+    const transaction = await Transaction.findOne({ where: { operatorTransactionId: transactionId } });
+    return !!transaction;
+  }
+
 }
+
 
 Transaction.init(
   {

@@ -8,9 +8,17 @@ export class TransactionController {
       const { amount, operatorTransactionId, userId } = req.body;
   
       // Vérification des champs requis
-      if (!amount || !operatorTransactionId || !userId) {
+      if (!amount || !userId) {
         res.status(400).json({
-          error: "Les champs amount, operatorTransactionId et userId sont requis.",
+          error: "Les champs amount et userId sont requis.",
+        });
+        return;
+      }
+      // Vérification du format de operatorTransactionId
+      const operatorTransactionIdRegex = /^[A-Z]{2}\d{6}\.\d{4}\.[A-Z0-9]{6}$|^\d{10,11}$/;
+      if (!operatorTransactionIdRegex.test(operatorTransactionId)) {
+        res.status(400).json({
+          error: "Le format de operatorTransactionId est incorrect.",
         });
         return;
       }
@@ -31,6 +39,13 @@ export class TransactionController {
     }
   }
   
+
+
+
+
+
+
+
 
   // Confirmer une transaction de dépôt
   async confirmDepositTransaction(req: Request, res: Response): Promise<void> {
