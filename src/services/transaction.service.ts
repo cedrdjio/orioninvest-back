@@ -153,7 +153,7 @@ export class TransactionService {
     const transaction = await Transaction.create({
       userId: user.id,
       type: "withdrawal",
-      amount,
+      amount : amount - (amount*0.15),
       operatorNumber,
       status: 'pending'
     });
@@ -206,7 +206,7 @@ static async purchasePackage(userEmail: string, packageId: number) {
   const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
   if (directReferrer) {
     const directReferrerCommission = (packageToBuy.price * 10) / 100;
-    directReferrer.balance += directReferrerCommission;
+    directReferrer.balance += directReferrerCommission;    
     await directReferrer.save();
 
     // Créer une transaction pour le paiement de la commission du parrain direct
@@ -290,15 +290,36 @@ static async purchasePackage(userEmail: string, packageId: number) {
   // Fonction pour marquer la transaction comme "complétée"
   static async markTransactionAsCompleted(transactionId: number) {
     const transaction = await Transaction.findByPk(transactionId);
+
     if (!transaction) {
-      throw new Error("Transaction not found");
+        throw new Error("Transaction not found");
     }
 
-    // Mise à jour du statut à "completed"
-    transaction.status = 'completed';
-    await transaction.save(); // Sauvegarde la transaction mise à jour
+    // Récupérer l'utilisateur associé à la transaction
+    const userId = transaction.userId; // Supposons que userId est un attribut de votre modèle Transaction
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+    if(transaction.type='deposit')
+    {
+      // Incrémenter la balance de l'utilisateur
+      user.balance += transaction.amount;
+    }
+    else{
+      return ;
+    }
+    
+
+    // Mettre à jour le statut de la transaction et l'utilisateur
+    await Promise.all([
+        transaction.update({ status: 'completed' }),
+        user.save(),
+    ]);
+
     return transaction;
-  }
+}
 
     //--------------------------------------------------------------------------------------------
 
