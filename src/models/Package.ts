@@ -1,3 +1,4 @@
+// src/models/Package.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 
@@ -10,6 +11,8 @@ class Package extends Model {
   public niche?: string; // Champ niche
   public description?: string; // Champ description
   public image?: string; // Nouveau champ image
+  public startDate?: Date;  // Date de début du package
+  public progressPercentage!: number; // Progression du package pour chaque utilisateur
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -50,12 +53,21 @@ Package.init(
       type: DataTypes.STRING,
       allowNull: true, // Autorise la valeur null (pour les packages sans image)
     },
+    startDate: {
+      type: DataTypes.DATE,
+      allowNull: true,  // Ce champ peut être null jusqu'à l'achat du package
+    },
+    progressPercentage: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,  // Initialisation de la progression à 0
+      allowNull: false,  // Ce champ ne peut pas être nul
+    },
   },
   {
     sequelize,
     modelName: 'Package',
     tableName: 'packages',
-    timestamps: true, // Ajoute les champs createdAt et updatedAt
+    timestamps: true,  // Active les champs createdAt et updatedAt
   }
 );
 

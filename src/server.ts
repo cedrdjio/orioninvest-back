@@ -1,16 +1,16 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import sequelize from './config/database';
 import User from './models/User';
 const cors = require('cors');
 import router from './routes';
-// src/app.ts ou src/server.ts
-import './cronJobs/scheduler';  // Importer et démarrer la planification des tâches cron
+import './cronJobs/applyDailyInterest';  // Importation du fichier contenant la tâche cron
 import Package from './models/Package';
 import Transaction from './models/Transaction';
 import swaggerApp from './swagger'; 
 import createDefaultUser from './config/baseData';
 import VerifiedChain from './models/VerifiedChain';
+
 dotenv.config();
 
 const app: Application = express();
@@ -18,9 +18,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware pour gérer les CORS
 app.use(cors({
-    origin: '*', // Permet les requêtes depuis n'importe quelle origine
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Méthodes HTTP autorisées
-    allowedHeaders: ['Content-Type', 'Authorization'] // En-têtes autorisés
+  origin: '*', // Permet les requêtes depuis n'importe quelle origine
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Méthodes HTTP autorisées
+  allowedHeaders: ['Content-Type', 'Authorization'] // En-têtes autorisés
 }));
 
 app.use(express.json());
@@ -36,12 +36,10 @@ const startServer = async () => {
     console.log('Connexion à la base de données réussie.');
 
     await User.sync({ force: false });
-    // await createDefaultUser();
     await Package.sync({ force: false });
     await Transaction.sync({ force: false });
     await VerifiedChain.sync({ force: false });
     console.log('All models have been synchronized successfully.');
-    console.log('Modèles synchronisés.');
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
