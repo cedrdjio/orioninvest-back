@@ -14,7 +14,7 @@ interface UserAttributes {
   TotalWithdraw: number; // Nouveau champ ajouté
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'referrer_id'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'referrer_id'|'TotalWithdraw'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;

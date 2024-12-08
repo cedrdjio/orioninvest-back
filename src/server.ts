@@ -5,7 +5,7 @@ import User from './models/User';
 const cors = require('cors');
 import router from './routes';
 // src/app.ts ou src/server.ts
-import './cronJobs/scheduler';  // Importer et démarrer la planification des tâches cron
+//import './cronJobs/scheduler';  // Importer et démarrer la planification des tâches cron
 import Package from './models/Package';
 import Transaction from './models/Transaction';
 import swaggerApp from './swagger'; 
