@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
+import sequelize from '../config/database'; // Assure-toi que ton fichier config Sequelize est correct
 
 interface UserAttributes {
   id: number;
@@ -8,10 +8,9 @@ interface UserAttributes {
   name: string;
   password: string;
   referral_code: string;
-  referrer_id?: string;
+  referrer_id?: string ;
   balance: number;
   referral_balance: number;
-  TotalWithdraw: number; // Nouveau champ ajouté
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'referrer_id'> {}
@@ -23,10 +22,9 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public name!: string;
   public password!: string;
   public referral_code!: string;
-  public referrer_id?: string;
+  public referrer_id?: string ;
   public balance!: number;
   public referral_balance!: number;
-  public TotalWithdraw!: number; // Nouveau champ ajouté
 }
 
 User.init(
@@ -39,12 +37,12 @@ User.init(
     phone_number: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true, // Numéro unique
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true, // Email unique
     },
     name: {
       type: DataTypes.STRING,
@@ -57,30 +55,20 @@ User.init(
     referral_code: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true
     },
     referrer_id: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
-    balance: {
-      type: DataTypes.FLOAT,
-      defaultValue: 0,
-    },
-    referral_balance: {
-      type: DataTypes.FLOAT,
-      defaultValue: 0,
-    },
-    TotalWithdraw: { // Nouveau champ
-      type: DataTypes.FLOAT,
-      defaultValue: 0,
-    },
+    balance: { type: DataTypes.FLOAT, defaultValue: 0 },
+    referral_balance: { type: DataTypes.FLOAT, defaultValue: 0 },
   },
   {
     sequelize,
     modelName: 'User',
-    tableName: 'users',
-    timestamps: true,
+    tableName: 'users', // Optionnel : correspond à la table SQL
+    timestamps: true,   // Active les colonnes createdAt et updatedAt
   }
 );
 
