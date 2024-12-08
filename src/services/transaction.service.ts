@@ -157,6 +157,8 @@ export class TransactionService {
       operatorNumber,
       status: 'pending'
     });
+
+    user.TotalWithdraw+= amount;
     // Déduit le montant en priorité de `balance`, puis de `referral_balance` si nécessaire
     if (user.balance >= amount) {
       user.balance -= amount;
