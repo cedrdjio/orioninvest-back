@@ -157,9 +157,6 @@ export class TransactionService {
       operatorNumber,
       status: 'pending'
     });
-
-    //user.TotalWithdraw += amount;
-
     // Déduit le montant en priorité de `balance`, puis de `referral_balance` si nécessaire
     if (user.balance >= amount) {
       user.balance -= amount;
@@ -177,8 +174,9 @@ export class TransactionService {
 
 
 
-  /// Achat d'un package avec distribution des commissions pour les parrains
+  // Achat d'un package avec distribution des commissions pour les parrains
 static async purchasePackage(userEmail: string, packageId: number) {
+  // Récupérer l'utilisateur et le package
   const user = await User.findOne({ where: { email: userEmail } });
   const packageToBuy = await Package.findByPk(packageId);
 
@@ -186,60 +184,62 @@ static async purchasePackage(userEmail: string, packageId: number) {
     throw new Error("User or package not found");
   }
 
+  // Vérifier si l'utilisateur a suffisamment de fonds
   if (user.balance < packageToBuy.price) {
-    throw new Error("Votre solde est insuffisant pour l'achat");
+    throw new Error("Insufficient funds");
   }
 
-  // Créer une transaction pour l'achat et définir la startDate
+  // Créer une transaction pour l'achat
   const transaction = await Transaction.create({
     userId: user.id,
     type: "package_purchase",
     amount: packageToBuy.price,
     packageId: packageToBuy.id,
-    status: "completed",
-    startDate: new Date(), // Définir la startDate au moment de l'achat
+    status: "completed"
   });
 
+  // Déduire le prix du package du solde de l'utilisateur
   user.balance -= packageToBuy.price;
   await user.save();
 
-  // Calcul des commissions pour les parrains
+  // Calculer la commission du parrain direct
   const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
   if (directReferrer) {
     const directReferrerCommission = (packageToBuy.price * 10) / 100;
-    directReferrer.referral_balance += directReferrerCommission;    
+    directReferrer.balance += directReferrerCommission;    
     await directReferrer.save();
 
+    // Créer une transaction pour le paiement de la commission du parrain direct
     await Transaction.create({
       userId: directReferrer.id,
       type: "commission",
       amount: directReferrerCommission,
       packageId: packageToBuy.id,
-      status: "completed",
+      status: "completed"
     });
   }
 
-  // Vérification du grand-parent (parrain du parrain)
+  // Vérifier le parrain du parrain (grand-parent)
   if (directReferrer && directReferrer.referrer_id) {
     const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
     if (grandParentReferrer) {
-      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200;
-      grandParentReferrer.referral_balance += grandParentReferrerCommission;
+      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200; // Divisé par 2
+      grandParentReferrer.balance += grandParentReferrerCommission;
       await grandParentReferrer.save();
 
+      // Créer une transaction pour le paiement de la commission du grand-parent
       await Transaction.create({
         userId: grandParentReferrer.id,
         type: "commission",
         amount: grandParentReferrerCommission,
         packageId: packageToBuy.id,
-        status: "completed",
+        status: "completed"
       });
     }
   }
 
   return transaction;
 }
-
 
 
     //---------------------------------------------------------------------------------------

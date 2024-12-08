@@ -39,7 +39,8 @@ export class AuthService {
       referral_code,
       referrer_id: referrer_code,
       balance: 0,
-      referral_balance: 0
+      referral_balance: 0,
+      TotalWithdraw : 0
     });
 
     return user;
