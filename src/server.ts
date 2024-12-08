@@ -4,7 +4,7 @@ import sequelize from './config/database';
 import User from './models/User';
 const cors = require('cors');
 import router from './routes';
-import './cronJobs/applyDailyInterest';  // Importation du fichier contenant la tâche cron
+//import './cronJobs/applyDailyInterest';  // Importation du fichier contenant la tâche cron
 import Package from './models/Package';
 import Transaction from './models/Transaction';
 import swaggerApp from './swagger'; 
