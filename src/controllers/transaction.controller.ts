@@ -253,12 +253,13 @@ async markTransactionAsFailed(req: Request, res: Response, next: NextFunction): 
 
 
 // Récupérer les achats de package pour un utilisateur donné
-async getUserPackagePurchases(req: Request, res: Response): Promise<void> {
-  const { email } = req.params; // Récupérer l'email depuis les paramètres de l'URL
-  
+async getUserPackagePurchases(req: Request, res: Response, next: NextFunction): Promise<void> {
+  // @ts-ignore: Assurez-vous que 'req.user' est bien renseigné par le middleware d'authentification
+  const userEmail = req.user.email;
+
   try {
     // Appeler le service pour récupérer les achats de package
-    const packagePurchases = await TransactionService.getUserPackagePurchases(email);
+    const packagePurchases = await TransactionService.getUserPackagePurchases(userEmail);
 
     // Répondre avec les données récupérées
     res.status(200).json({
@@ -267,9 +268,12 @@ async getUserPackagePurchases(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     // Gérer les erreurs
-    res.status(500).json({
-      message: 'Une erreur est survenue.',
-    });
+    console.error(error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Une erreur est survenue.' });
+    }
   }
 }
 
