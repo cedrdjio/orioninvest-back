@@ -6,6 +6,7 @@ const cors = require('cors');
 import router from './routes';
 // src/app.ts ou src/server.ts
 //import './cronJobs/scheduler';  // Importer et démarrer la planification des tâches cron
+import { startInterestRateCronJob } from './cronJobs/interestedRate';
 import Package from './models/Package';
 import Transaction from './models/Transaction';
 import swaggerApp from './swagger'; 
@@ -15,6 +16,11 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
+
+// Démarrage du CronJob
+startInterestRateCronJob();
+
+
 
 // Middleware pour gérer les CORS
 app.use(cors({

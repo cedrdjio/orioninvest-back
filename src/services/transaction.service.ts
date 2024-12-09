@@ -221,6 +221,8 @@ static async purchasePackage(userEmail: string, packageId: number) {
     });
   }
 
+  packageToBuy.startDate = new Date();
+
   // Vérifier le parrain du parrain (grand-parent)
   if (directReferrer && directReferrer.referrer_id) {
     const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
