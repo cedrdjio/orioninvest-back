@@ -103,7 +103,7 @@ export const startInterestRateCronJob = () => {
         }
 
         // Assurez-vous que packageData contient bien les informations nécessaires
-        if (!packageData.startDate || !(packageData.startDate instanceof Date)) {
+        if (!transaction.createdAt || !(transaction.createdAt instanceof Date)) {
           console.error('Invalid startDate in packageData:', packageData.startDate);
           return;
         }
@@ -114,7 +114,7 @@ export const startInterestRateCronJob = () => {
         }
 
         // Extraction des données nécessaires
-        const startDate = new Date(packageData.startDate); // Copie sécurisée de startDate
+        const startDate = new Date(transaction.createdAt); // Copie sécurisée de startDate
         const duration = packageData.duration; // Durée du package en jours
 
         // Calcul de la date de fin
