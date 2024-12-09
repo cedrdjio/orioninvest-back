@@ -509,6 +509,8 @@ router.put('/transaction/:transactionId/completed', transactionController.markTr
 //Routes pour marquer comme failed
 router.put('/transaction/:transactionId/failed', transactionController.markTransactionAsFailed);
 
+// Route pour récupérer les achats de packages d'un utilisateur par son email
+router.get('/transactions/packagePurchase', authenticateToken,  transactionController.getUserPackagePurchases);
 
 
 export default router;

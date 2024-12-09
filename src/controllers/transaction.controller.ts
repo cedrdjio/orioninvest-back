@@ -39,14 +39,6 @@ export class TransactionController {
     }
   }
   
-
-
-
-
-
-
-
-
   // Confirmer une transaction de dépôt
   async confirmDepositTransaction(req: Request, res: Response): Promise<void> {
     try {
@@ -258,5 +250,31 @@ async markTransactionAsFailed(req: Request, res: Response, next: NextFunction): 
     }
   }
 }
+
+
+// Récupérer les achats de package pour un utilisateur donné
+async getUserPackagePurchases(req: Request, res: Response): Promise<void> {
+  const { email } = req.params; // Récupérer l'email depuis les paramètres de l'URL
+  
+  try {
+    // Appeler le service pour récupérer les achats de package
+    const packagePurchases = await TransactionService.getUserPackagePurchases(email);
+
+    // Répondre avec les données récupérées
+    res.status(200).json({
+      message: 'Historique des achats de packages récupéré avec succès.',
+      data: packagePurchases,
+    });
+  } catch (error) {
+    // Gérer les erreurs
+    res.status(500).json({
+      message: 'Une erreur est survenue.',
+    });
+  }
+}
+
+
+
+
 
 }

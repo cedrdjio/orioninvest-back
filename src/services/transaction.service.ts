@@ -222,6 +222,7 @@ static async purchasePackage(userEmail: string, packageId: number) {
   }
 
   packageToBuy.startDate = new Date();
+  packageToBuy.progressPercentage = 0;
 
   // Vérifier le parrain du parrain (grand-parent)
   if (directReferrer && directReferrer.referrer_id) {
@@ -340,6 +341,54 @@ static async markTransactionAsFailed(transactionId: number) {
   await transaction.save(); // Sauvegarde la transaction mise à jour
   return transaction;
 }
+
+
+
+
+
+
+// Fonction pour récupérer la liste des packages achetés 
+static async getUserPackagePurchases(userEmail: string) {
+  // Trouver l'utilisateur par son email
+  const user = await User.findOne({ where: { email: userEmail } });
+  if (!user) {
+    throw new Error('Utilisateur non trouvé');
+  }
+
+  // Récupérer toutes les transactions de type 'package_purchase' pour cet utilisateur
+  const transactions = await Transaction.findAll({
+    where: { 
+      type: 'package_purchase', 
+      userId: user.id 
+    },
+  });
+
+  // Formater les résultats pour inclure les détails du package
+  const result = [];
+
+  for (const transaction of transactions) {
+    // Récupérer le package associé via packageId
+    const packageData = await Package.findByPk(transaction.packageId);
+    
+    if (!packageData) {
+      console.warn(`Package non trouvé pour la transaction ID: ${transaction.id}`);
+      continue;
+    }
+
+    result.push({
+      transactionId: transaction.id,
+      packageName: packageData.name,
+      packageImage: packageData.image,
+      packageProgress: packageData.progressPercentage,
+      purchaseDate: transaction.createdAt, // Date de l'achat
+      amountPaid: transaction.amount, // Montant payé pour le package
+    });
+  }
+
+  return result;
+}
+
+
 
   
 }
