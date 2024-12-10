@@ -350,7 +350,8 @@ static async markTransactionAsCompleted(transactionId: number) {
   if (transaction.type === 'deposit') {
     // Assurez-vous que user.balance est un nombre
     const currentBalance = parseFloat(user.balance.toString()); // Convertir en nombre si nécessaire
-    user.balance = currentBalance + transaction.amount;
+    const amount = parseFloat(transaction.amount.toString());
+    user.balance = currentBalance + amount;
 
     await user.save();  // Attendre la sauvegarde de l'utilisateur
   } else {
