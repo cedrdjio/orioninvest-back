@@ -6,38 +6,43 @@ import { MessageEvent } from "http";
 export class TransactionService {
 
   // Initialiser une transaction de dépôt
-  static async initDepositTransaction(
-    amount: number,
-    operatorTransactionId: string,
-    userId: number
-  ) {
-    // Vérification de l'existence d'une transaction similaire
-    const existingTransaction = await Transaction.findOne({
-      where: { operatorTransactionId, type: "deposit" },
-    });
-    if (existingTransaction) {
-      throw new Error("Une transaction avec cet ID d'opérateur existe déjà.");
-    }
-  
-    // Vérification de l'existence de l'utilisateur
-    const user = await User.findByPk(userId);
-    if (!user) {
-      throw new Error("Utilisateur introuvable.");
-    }
-  
-    // Création de la transaction avec un statut `pending`
-    const transaction = await Transaction.create({
-      userId,
-      name : user.name,
-      operatorNumber : user.phone_number,
-      type: "deposit",
-      amount,
-      status: "pending",
-      operatorTransactionId,
-    });
-  
-    return transaction;
+static async initDepositTransaction(
+  amount: number,
+  operatorTransactionId: string,
+  userId: number
+) {
+  // Vérification que le montant est supérieur à zéro
+  if (amount <= 0) {
+    throw new Error("Le montant doit être supérieur à zéro.");
   }
+
+  // Vérification de l'existence d'une transaction similaire
+  const existingTransaction = await Transaction.findOne({
+    where: { operatorTransactionId, type: "deposit" },
+  });
+  if (existingTransaction) {
+    throw new Error("Une transaction avec cet ID d'opérateur existe déjà.");
+  }
+
+  // Vérification de l'existence de l'utilisateur
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw new Error("Utilisateur introuvable.");
+  }
+
+  // Création de la transaction avec un statut `pending`
+  const transaction = await Transaction.create({
+    userId,
+    name: user.name,
+    operatorNumber: user.phone_number,
+    type: "deposit",
+    amount,
+    status: "pending",
+    operatorTransactionId,
+  });
+
+  return transaction;
+}
   
 
   //---------------------------------------------------------------------------------------
@@ -116,60 +121,80 @@ export class TransactionService {
 
 
   // Retrait de fonds
+  // Constants
+
+
   static async withdraw(
     userEmail: string,
     amount: number,
     operatorNumber: string
   ) {
-
+    const WITHDRAWAL_COMMISSION_RATE = 0.15;
+  
     // Validation des paramètres d'entrée
-    //if (!amount || amount <= 0) {
-     // throw new Error("Le montant du retrait doit être supérieur à zéro.");
-   // }
-   
+    if (!amount || amount <= 0) {
+      throw new Error("Le montant du retrait doit être supérieur à zéro.");
+    }
+  
     // Récupération de l'utilisateur par email
     const user = await User.findOne({ where: { email: userEmail } });
     if (!user) {
       throw new Error("Utilisateur non trouvé.");
     }
+  
     // Vérification de l'achat de package préalable
-    const purchaseExists = await Transaction.findOne({
-      where: {
-        userId: user.id,
-        type: "package_purchase",
-      },
+    const hasPurchasedPackage = await Transaction.findOne({
+      where: { userId: user.id, type: "package_purchase" },
     });
-    if (!purchaseExists) {
+    if (!hasPurchasedPackage) {
       throw new Error(
         "Vous devez effectuer un achat de package avant de pouvoir effectuer un retrait."
       );
     }
+  
     // Calcul du solde total (balance + referral_balance)
-    const totalBalance = user.balance + user.referral_balance;
+    const totalBalance = parseFloat(user.balance.toString()) + parseFloat(user.referral_balance.toString());
     if (totalBalance < amount) {
       throw new Error("Fonds insuffisants pour effectuer le retrait.");
     }
+  
+    // Calcul du montant après commission
+    const amountAfterCommission = amount * (1 - WITHDRAWAL_COMMISSION_RATE);
+  
     // Création de la transaction de retrait
     const transaction = await Transaction.create({
       userId: user.id,
       type: "withdrawal",
-      amount : amount - (amount*0.15),
+      amount: amountAfterCommission,
       operatorNumber,
-      status: 'pending'
+      status: "pending", // Initial status set to pending
     });
-
-    user.TotalWithdraw+= amount;
-    // Déduit le montant en priorité de `balance`, puis de `referral_balance` si nécessaire
-    if (user.balance >= amount) {
-      user.balance -= amount;
+  
+    // Mise à jour du montant total retiré
+    user.TotalWithdraw = (user.TotalWithdraw || 0) + amount;
+  
+    // Assurez-vous que balance et referral_balance sont des nombres
+    let userBalance = parseFloat(user.balance.toString());
+    let userReferralBalance = parseFloat(user.referral_balance.toString());
+  
+    // Mise à jour des soldes utilisateur
+    if (userBalance >= amount) {
+      userBalance -= amount;
     } else {
-      const remainingAmount = amount - user.balance;
-      user.balance = 0;
-      user.referral_balance -= remainingAmount;
+      const remainingAmount = amount - userBalance;
+      userBalance = 0;
+      userReferralBalance -= remainingAmount;
     }
+  
+    // Sauvegarde des modifications
+    user.balance = userBalance;  // Met à jour balance
+    user.referral_balance = userReferralBalance;  // Met à jour referral_balance
     await user.save();
+  
+    // Retour de la transaction créée
     return transaction;
   }
+  
 
     //---------------------------------------------------------------------------------------
 
@@ -183,13 +208,32 @@ static async purchasePackage(userEmail: string, packageId: number) {
   const packageToBuy = await Package.findByPk(packageId);
 
   if (!user || !packageToBuy) {
-    throw new Error("User or package not found");
+    throw new Error("Utilisateur ou package introuvable.");
   }
 
+  // Calculer le total des fonds disponibles
+  const totalFunds = user.balance + user.referral_balance;
+
   // Vérifier si l'utilisateur a suffisamment de fonds
-  if (user.balance < packageToBuy.price) {
-    throw new Error("Insufficient funds");
+  if (totalFunds < packageToBuy.price) {
+    throw new Error("Fonds insuffisants pour effectuer cet achat.");
   }
+
+  // Déduire le prix du package des soldes utilisateur
+  let remainingAmount = packageToBuy.price;
+
+  if (user.balance >= remainingAmount) {
+    user.balance -= remainingAmount;
+    remainingAmount = 0;
+  } else {
+    remainingAmount -= user.balance;
+    user.balance = 0;
+  }
+  if (remainingAmount > 0) {
+    user.referral_balance -= remainingAmount;
+  }
+
+  await user.save();
 
   // Créer une transaction pour l'achat
   const transaction = await Transaction.create({
@@ -197,52 +241,46 @@ static async purchasePackage(userEmail: string, packageId: number) {
     type: "package_purchase",
     amount: packageToBuy.price,
     packageId: packageToBuy.id,
-    status: "completed"
+    status: "completed",
   });
 
-  // Déduire le prix du package du solde de l'utilisateur
-  user.balance -= packageToBuy.price;
-  await user.save();
-
-  // Calculer la commission du parrain direct
+  // Calculer et distribuer la commission du parrain direct
   const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
   if (directReferrer) {
     const directReferrerCommission = (packageToBuy.price * 10) / 100;
-    directReferrer.balance += directReferrerCommission;    
+    directReferrer.balance += directReferrerCommission;
     await directReferrer.save();
 
-    // Créer une transaction pour le paiement de la commission du parrain direct
+    // Créer une transaction pour la commission du parrain direct
     await Transaction.create({
       userId: directReferrer.id,
       type: "commission",
       amount: directReferrerCommission,
       packageId: packageToBuy.id,
-      status: "completed"
+      status: "completed",
     });
   }
-
-  packageToBuy.startDate = new Date();
-  packageToBuy.progressPercentage = 0;
 
   // Vérifier le parrain du parrain (grand-parent)
   if (directReferrer && directReferrer.referrer_id) {
     const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
     if (grandParentReferrer) {
-      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200; // Divisé par 2
+      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200; // 5 % du prix
       grandParentReferrer.balance += grandParentReferrerCommission;
       await grandParentReferrer.save();
 
-      // Créer une transaction pour le paiement de la commission du grand-parent
+      // Créer une transaction pour la commission du grand-parent
       await Transaction.create({
         userId: grandParentReferrer.id,
         type: "commission",
         amount: grandParentReferrerCommission,
         packageId: packageToBuy.id,
-        status: "completed"
+        status: "completed",
       });
     }
   }
 
+  // Retourner la transaction d'achat
   return transaction;
 }
 
@@ -293,37 +331,37 @@ static async purchasePackage(userEmail: string, packageId: number) {
   //--------------------------------------------------------------------------------------------
 
   // Fonction pour marquer la transaction comme "complétée"
-  static async markTransactionAsCompleted(transactionId: number) {
-    const transaction = await Transaction.findByPk(transactionId);
+static async markTransactionAsCompleted(transactionId: number) {
+  const transaction = await Transaction.findByPk(transactionId);
 
-    if (!transaction) {
-        throw new Error("Transaction not found");
-    }
+  if (!transaction) {
+    throw new Error("Transaction not found");
+  }
 
-    // Récupérer l'utilisateur associé à la transaction
-    const userId = transaction.userId; // Supposons que userId est un attribut de votre modèle Transaction
-    const user = await User.findByPk(userId);
+  // Récupérer l'utilisateur associé à la transaction
+  const userId = transaction.userId; // Supposons que userId est un attribut de votre modèle Transaction
+  const user = await User.findByPk(userId);
 
-    if (!user) {
-        throw new Error("User not found");
-    }
-    if(transaction.type='deposit')
-    {
-      // Incrémenter la balance de l'utilisateur
-      user.balance += transaction.amount;
-    }
-    else{
-      return ;
-    }
-    
+  if (!user) {
+    throw new Error("User not found");
+  }
 
-    // Mettre à jour le statut de la transaction et l'utilisateur
-    await Promise.all([
-        transaction.update({ status: 'completed' }),
-        user.save(),
-    ]);
+  // Vérification du type de transaction
+  if (transaction.type === 'deposit') {
+    // Assurez-vous que user.balance est un nombre
+    const currentBalance = parseFloat(user.balance.toString()); // Convertir en nombre si nécessaire
+    user.balance = currentBalance + transaction.amount;
 
-    return transaction;
+    await user.save();  // Attendre la sauvegarde de l'utilisateur
+  } else {
+    // Si la transaction n'est pas de type "deposit", retourner sans modification
+    return;
+  }
+
+  // Mettre à jour le statut de la transaction à "completed"
+  await transaction.update({ status: 'completed' });
+
+  return transaction;
 }
 
     //--------------------------------------------------------------------------------------------
