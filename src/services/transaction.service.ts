@@ -244,41 +244,57 @@ static async purchasePackage(userEmail: string, packageId: number) {
     status: "completed",
   });
 
-  // Calculer et distribuer la commission du parrain direct
-  const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
-  if (directReferrer) {
-    const directReferrerCommission = (packageToBuy.price * 10) / 100;
-    directReferrer.balance += directReferrerCommission;
-    await directReferrer.save();
-
-    // Créer une transaction pour la commission du parrain direct
-    await Transaction.create({
-      userId: directReferrer.id,
-      type: "commission",
-      amount: directReferrerCommission,
-      packageId: packageToBuy.id,
-      status: "completed",
-    });
-  }
-
-  // Vérifier le parrain du parrain (grand-parent)
-  if (directReferrer && directReferrer.referrer_id) {
-    const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
-    if (grandParentReferrer) {
-      const grandParentReferrerCommission = (packageToBuy.price * 10) / 200; // 5 % du prix
-      grandParentReferrer.balance += grandParentReferrerCommission;
-      await grandParentReferrer.save();
-
-      // Créer une transaction pour la commission du grand-parent
+  try {
+    const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
+  
+    if (directReferrer) {
+      // Calcul de la commission pour le parrain direct (10 %)
+      const directReferrerCommission = (packageToBuy.price * 10) / 100;
+      directReferrer.referral_balance = (directReferrer.referral_balance || 0) + directReferrerCommission;
+      await directReferrer.save();
+  
+      // Enregistrement de la transaction pour le parrain direct
       await Transaction.create({
-        userId: grandParentReferrer.id,
-        type: "commission",
-        amount: grandParentReferrerCommission,
+        userId: directReferrer.id,
+        type: "deposit",
+        amount: directReferrerCommission,
         packageId: packageToBuy.id,
         status: "completed",
       });
+  
+      console.log(`Commission directe attribuée à l'utilisateur ${directReferrer.id}: ${directReferrerCommission}`);
+    } else {
+      console.log("Aucun parrain direct trouvé pour l'utilisateur.");
     }
+  
+    // Vérifier et calculer la commission pour le parrain du parrain (grand-parent)
+    if (directReferrer && directReferrer.referrer_id) {
+      const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
+  
+      if (grandParentReferrer) {
+        // Calcul de la commission pour le grand-parent (5 %)
+        const grandParentReferrerCommission = (packageToBuy.price * 5) / 100;
+        grandParentReferrer.referral_balance = (grandParentReferrer.referral_balance || 0) + grandParentReferrerCommission;
+        await grandParentReferrer.save();
+  
+        // Enregistrement de la transaction pour le grand-parent
+        await Transaction.create({
+          userId: grandParentReferrer.id,
+          type: "deposit",
+          amount: grandParentReferrerCommission,
+          packageId: packageToBuy.id,
+          status: "completed",
+        });
+  
+        console.log(`Commission indirecte attribuée à l'utilisateur ${grandParentReferrer.id}: ${grandParentReferrerCommission}`);
+      } else {
+        console.log("Aucun grand-parent trouvé pour le parrain direct.");
+      }
+    }
+  } catch (error) {
+    console.error("Erreur lors de la gestion des commissions :", error);
   }
+  
 
   // Retourner la transaction d'achat
   return transaction;
