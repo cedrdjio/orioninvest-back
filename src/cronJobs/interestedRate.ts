@@ -143,10 +143,12 @@ export const startInterestRateCronJob = () => {
           // Mettre à jour le pourcentage de progression du package
           packageData.progressPercentage = progressPercentage;
           await packageData.save();
+          await packageData.reload();   
   
           console.log(
             `Le package ID: ${packageData.id} pour l'utilisateur ID: ${user.id} a progressé à ${progressPercentage}%`
           );
+          console.log(`Package ID: ${packageData.id}, Progression actuelle: ${packageData.progressPercentage}`);
   
           // Vérifier si 24h se sont écoulées depuis l'achat
           const hoursElapsed = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60);  // Différence en heures
