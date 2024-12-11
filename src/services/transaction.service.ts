@@ -260,69 +260,69 @@ static async purchasePackage(userEmail: string, packageId: number) {
 
 
 // Méthode pour distribuer les commissions aux parrains
+// Méthode pour distribuer les commissions aux parrains
+// Méthode pour distribuer les commissions aux parrains
 static async distributeCommissions(user: User, packageToBuy: Package) {
-  // Gestion de la commission pour le parrain direct
   try {
-    const directReferrer = user.referrer_id
-      ? await User.findOne({ where: { id: Number(user.referrer_id) } }) // Convertir referrer_id en entier
-      : null;
+    // Gestion de la commission pour le parrain direct
+    const directReferrerId = user.referrer_id ? Number(user.referrer_id) : null;
 
-    if (directReferrer) {
-      // Calcul de la commission pour le parrain direct (10 %)
-      const directReferrerCommission = (packageToBuy.price * 10) / 100;
-      directReferrer.referral_balance = (directReferrer.referral_balance || 0) + directReferrerCommission;
-      await directReferrer.save();
+    if (directReferrerId && !isNaN(directReferrerId)) {
+      const directReferrer = await User.findByPk(directReferrerId);
 
-      // Enregistrement de la transaction pour le parrain direct
-      await Transaction.create({
-        userId: directReferrer.id,
-        type: "deposit",
-        amount: directReferrerCommission,
-        packageId: packageToBuy.id,
-        status: "completed",
-      });
+      if (directReferrer) {
+        // Calcul de la commission pour le parrain direct (10 %)
+        const directReferrerCommission = (packageToBuy.price * 10) / 100;
+        directReferrer.referral_balance = (directReferrer.referral_balance || 0) + directReferrerCommission;
+        await directReferrer.save();
 
-      console.log(`Commission directe attribuée à l'utilisateur ${directReferrer.id}: ${directReferrerCommission}`);
-    } else {
-      console.log("Aucun parrain direct trouvé pour l'utilisateur.");
-    }
-  } catch (error) {
-    console.error("Erreur lors de la gestion de la commission pour le parrain direct :", error);
-  }
-
-  // Gestion de la commission pour le grand-parent (parrain du parrain)
-  try {
-    const directReferrer = user.referrer_id
-      ? await User.findOne({ where: { id: Number(user.referrer_id) } }) // Récupérer à nouveau pour garantir les données
-      : null;
-
-    if (directReferrer && directReferrer.referrer_id) {
-      const grandParentReferrer = await User.findOne({ where: { id: Number(directReferrer.referrer_id) } });
-
-      if (grandParentReferrer) {
-        // Calcul de la commission pour le grand-parent (5 %)
-        const grandParentReferrerCommission = (packageToBuy.price * 5) / 100;
-        grandParentReferrer.referral_balance = (grandParentReferrer.referral_balance || 0) + grandParentReferrerCommission;
-        await grandParentReferrer.save();
-
-        // Enregistrement de la transaction pour le grand-parent
+        // Enregistrement de la transaction pour le parrain direct
         await Transaction.create({
-          userId: grandParentReferrer.id,
+          userId: directReferrer.id,
           type: "deposit",
-          amount: grandParentReferrerCommission,
+          amount: directReferrerCommission,
           packageId: packageToBuy.id,
           status: "completed",
         });
 
-        console.log(`Commission indirecte attribuée à l'utilisateur ${grandParentReferrer.id}: ${grandParentReferrerCommission}`);
+        console.log(`Commission directe attribuée à l'utilisateur ${directReferrer.id}: ${directReferrerCommission}`);
+
+        // Vérification pour le grand-parent uniquement si directReferrer est défini
+        const grandParentReferrerId = directReferrer.referrer_id ? Number(directReferrer.referrer_id) : null;
+
+        if (grandParentReferrerId && !isNaN(grandParentReferrerId)) {
+          const grandParentReferrer = await User.findByPk(grandParentReferrerId);
+
+          if (grandParentReferrer) {
+            // Calcul de la commission pour le grand-parent (5 %)
+            const grandParentReferrerCommission = (packageToBuy.price * 5) / 100;
+            grandParentReferrer.referral_balance = (grandParentReferrer.referral_balance || 0) + grandParentReferrerCommission;
+            await grandParentReferrer.save();
+
+            // Enregistrement de la transaction pour le grand-parent
+            await Transaction.create({
+              userId: grandParentReferrer.id,
+              type: "deposit",
+              amount: grandParentReferrerCommission,
+              packageId: packageToBuy.id,
+              status: "completed",
+            });
+
+            console.log(`Commission indirecte attribuée à l'utilisateur ${grandParentReferrer.id}: ${grandParentReferrerCommission}`);
+          } else {
+            console.log("Aucun grand-parent trouvé pour le parrain direct.");
+          }
+        }
       } else {
-        console.log("Aucun grand-parent trouvé pour le parrain direct.");
+        console.log("Aucun parrain direct trouvé pour l'utilisateur.");
       }
     }
   } catch (error) {
-    console.error("Erreur lors de la gestion de la commission pour le grand-parent :", error);
+    console.error("Erreur lors de la gestion des commissions :", error);
+    throw error;
   }
 }
+
 
 
 
