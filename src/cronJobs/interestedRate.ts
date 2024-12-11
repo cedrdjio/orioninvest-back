@@ -82,7 +82,7 @@ import Package from '../models/Package';
 
 // CronJob exécuté tous les jours à minuit
 export const startInterestRateCronJob = () => {
-    cron.schedule('0 0 * * *', async () => {  // Exécution tous les jours à minuit
+    cron.schedule('* * * * *', async () => {  // Exécution tous les jours à minuit
       console.log('Début de l’exécution du CronJob pour mettre à jour les soldes des utilisateurs et la progression des packages.');
   
       try {

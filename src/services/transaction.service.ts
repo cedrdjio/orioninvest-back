@@ -246,6 +246,8 @@ static async purchasePackage(userEmail: string, packageId: number) {
       status: "completed",
     });
 
+    packageToBuy.progressPercentage = 1;
+
     // Distribution des commissions
     await this.distributeCommissions(user, packageToBuy);
 
