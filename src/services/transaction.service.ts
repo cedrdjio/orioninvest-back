@@ -258,10 +258,14 @@ static async purchasePackage(userEmail: string, packageId: number) {
   }
 }
 
+
 // Méthode pour distribuer les commissions aux parrains
 static async distributeCommissions(user: User, packageToBuy: Package) {
+  // Gestion de la commission pour le parrain direct
   try {
-    const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
+    const directReferrer = user.referrer_id
+      ? await User.findOne({ where: { id: Number(user.referrer_id) } }) // Convertir referrer_id en entier
+      : null;
 
     if (directReferrer) {
       // Calcul de la commission pour le parrain direct (10 %)
@@ -282,10 +286,18 @@ static async distributeCommissions(user: User, packageToBuy: Package) {
     } else {
       console.log("Aucun parrain direct trouvé pour l'utilisateur.");
     }
+  } catch (error) {
+    console.error("Erreur lors de la gestion de la commission pour le parrain direct :", error);
+  }
 
-    // Vérifier et calculer la commission pour le parrain du parrain (grand-parent)
+  // Gestion de la commission pour le grand-parent (parrain du parrain)
+  try {
+    const directReferrer = user.referrer_id
+      ? await User.findOne({ where: { id: Number(user.referrer_id) } }) // Récupérer à nouveau pour garantir les données
+      : null;
+
     if (directReferrer && directReferrer.referrer_id) {
-      const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
+      const grandParentReferrer = await User.findOne({ where: { id: Number(directReferrer.referrer_id) } });
 
       if (grandParentReferrer) {
         // Calcul de la commission pour le grand-parent (5 %)
@@ -308,8 +320,7 @@ static async distributeCommissions(user: User, packageToBuy: Package) {
       }
     }
   } catch (error) {
-    console.error("Erreur lors de la gestion des commissions :", error);
-    throw error;
+    console.error("Erreur lors de la gestion de la commission pour le grand-parent :", error);
   }
 }
 
