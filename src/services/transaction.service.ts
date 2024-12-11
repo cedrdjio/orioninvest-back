@@ -203,56 +203,72 @@ static async initDepositTransaction(
 
   // Achat d'un package avec distribution des commissions pour les parrains
 static async purchasePackage(userEmail: string, packageId: number) {
-  // Récupérer l'utilisateur et le package
-  const user = await User.findOne({ where: { email: userEmail } });
-  const packageToBuy = await Package.findByPk(packageId);
+  try {
+    // Récupérer l'utilisateur et le package
+    const user = await User.findOne({ where: { email: userEmail } });
+    const packageToBuy = await Package.findByPk(packageId);
 
-  if (!user || !packageToBuy) {
-    throw new Error("Utilisateur ou package introuvable.");
+    if (!user || !packageToBuy) {
+      throw new Error("Utilisateur ou package introuvable.");
+    }
+
+    // Calculer le total des fonds disponibles
+    const totalFunds = user.balance + user.referral_balance;
+
+    // Vérifier si l'utilisateur a suffisamment de fonds
+    if (totalFunds < packageToBuy.price) {
+      throw new Error("Fonds insuffisants pour effectuer cet achat.");
+    }
+
+    // Déduire le prix du package des soldes utilisateur
+    let remainingAmount = packageToBuy.price;
+
+    if (user.balance >= remainingAmount) {
+      user.balance -= remainingAmount;
+      remainingAmount = 0;
+    } else {
+      remainingAmount -= user.balance;
+      user.balance = 0;
+    }
+
+    if (remainingAmount > 0) {
+      user.referral_balance -= remainingAmount;
+    }
+
+    await user.save();
+
+    // Créer une transaction pour l'achat
+    const transaction = await Transaction.create({
+      userId: user.id,
+      type: "package_purchase",
+      amount: packageToBuy.price,
+      packageId: packageToBuy.id,
+      status: "completed",
+    });
+
+    // Distribution des commissions
+    await this.distributeCommissions(user, packageToBuy);
+
+    // Retourner la transaction d'achat
+    return transaction;
+
+  } catch (error) {
+    console.error("Erreur lors de l'achat d'un package :", error);
+    throw error;
   }
+}
 
-  // Calculer le total des fonds disponibles
-  const totalFunds = user.balance + user.referral_balance;
-
-  // Vérifier si l'utilisateur a suffisamment de fonds
-  if (totalFunds < packageToBuy.price) {
-    throw new Error("Fonds insuffisants pour effectuer cet achat.");
-  }
-
-  // Déduire le prix du package des soldes utilisateur
-  let remainingAmount = packageToBuy.price;
-
-  if (user.balance >= remainingAmount) {
-    user.balance -= remainingAmount;
-    remainingAmount = 0;
-  } else {
-    remainingAmount -= user.balance;
-    user.balance = 0;
-  }
-  if (remainingAmount > 0) {
-    user.referral_balance -= remainingAmount;
-  }
-
-  await user.save();
-
-  // Créer une transaction pour l'achat
-  const transaction = await Transaction.create({
-    userId: user.id,
-    type: "package_purchase",
-    amount: packageToBuy.price,
-    packageId: packageToBuy.id,
-    status: "completed",
-  });
-
+// Méthode pour distribuer les commissions aux parrains
+static async distributeCommissions(user: User, packageToBuy: Package) {
   try {
     const directReferrer = user.referrer_id ? await User.findByPk(user.referrer_id) : null;
-  
+
     if (directReferrer) {
       // Calcul de la commission pour le parrain direct (10 %)
       const directReferrerCommission = (packageToBuy.price * 10) / 100;
       directReferrer.referral_balance = (directReferrer.referral_balance || 0) + directReferrerCommission;
       await directReferrer.save();
-  
+
       // Enregistrement de la transaction pour le parrain direct
       await Transaction.create({
         userId: directReferrer.id,
@@ -261,22 +277,22 @@ static async purchasePackage(userEmail: string, packageId: number) {
         packageId: packageToBuy.id,
         status: "completed",
       });
-  
+
       console.log(`Commission directe attribuée à l'utilisateur ${directReferrer.id}: ${directReferrerCommission}`);
     } else {
       console.log("Aucun parrain direct trouvé pour l'utilisateur.");
     }
-  
+
     // Vérifier et calculer la commission pour le parrain du parrain (grand-parent)
     if (directReferrer && directReferrer.referrer_id) {
       const grandParentReferrer = await User.findByPk(directReferrer.referrer_id);
-  
+
       if (grandParentReferrer) {
         // Calcul de la commission pour le grand-parent (5 %)
         const grandParentReferrerCommission = (packageToBuy.price * 5) / 100;
         grandParentReferrer.referral_balance = (grandParentReferrer.referral_balance || 0) + grandParentReferrerCommission;
         await grandParentReferrer.save();
-  
+
         // Enregistrement de la transaction pour le grand-parent
         await Transaction.create({
           userId: grandParentReferrer.id,
@@ -285,7 +301,7 @@ static async purchasePackage(userEmail: string, packageId: number) {
           packageId: packageToBuy.id,
           status: "completed",
         });
-  
+
         console.log(`Commission indirecte attribuée à l'utilisateur ${grandParentReferrer.id}: ${grandParentReferrerCommission}`);
       } else {
         console.log("Aucun grand-parent trouvé pour le parrain direct.");
@@ -293,12 +309,10 @@ static async purchasePackage(userEmail: string, packageId: number) {
     }
   } catch (error) {
     console.error("Erreur lors de la gestion des commissions :", error);
+    throw error;
   }
-  
-
-  // Retourner la transaction d'achat
-  return transaction;
 }
+
 
 
     //---------------------------------------------------------------------------------------
