@@ -12,7 +12,7 @@ class Transaction extends Model {
   public amount!: number;
   public operatorNumber?: string; // Pour les dépôts
   public operatorTransactionId?: string; // Pour les dépôts
-  public status!: 'pending' | 'completed' | 'failed';
+  public status!: 'pending' | 'completed'  | 'failed' | 'close';
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;

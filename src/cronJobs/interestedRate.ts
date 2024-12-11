@@ -82,7 +82,7 @@ import Package from '../models/Package';
 
 // CronJob exécuté tous les jours à minuit
 export const startInterestRateCronJob = () => {
-    cron.schedule('* * * * *', async () => {  // Exécution tous les jours à minuit
+    cron.schedule('0 0 * * *', async () => {  // Exécution tous les jours à minuit
       console.log('Début de l’exécution du CronJob pour mettre à jour les soldes des utilisateurs et la progression des packages.');
   
       try {
@@ -129,6 +129,22 @@ export const startInterestRateCronJob = () => {
             console.log(`Le package ID: ${packageData.id} pour l'utilisateur ID: ${user.id} a expiré.`);
             continue;
           }
+
+          // Vérifier si le package est encore actif
+          const actualy = new Date();
+          if (actualy > endDate) {
+            console.log(`Le package ID: ${packageData.id} pour l'utilisateur ID: ${user.id} a expiré.`);
+
+            // Mettre à jour le status de la transaction à "close"
+            transaction.status = 'close';
+            await transaction.save();  // Sauvegarder la mise à jour du status
+            console.log(`Le status de la transaction ID: ${transaction.id} a été mis à jour à "close".`);
+
+            continue;  // Passer à la transaction suivante si le package est expiré
+          }
+
+
+
   
           // Calculer le pourcentage de progression basé sur la durée écoulée
           const daysElapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)); // Nombre de jours écoulés

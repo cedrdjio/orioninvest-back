@@ -431,7 +431,8 @@ static async getUserPackagePurchases(userEmail: string) {
   // Récupérer toutes les transactions de type 'package_purchase' pour cet utilisateur
   const transactions = await Transaction.findAll({
     where: { 
-      type: 'package_purchase', 
+      type: 'package_purchase',
+      status: 'completed', 
       userId: user.id 
     },
   });
@@ -448,10 +449,16 @@ static async getUserPackagePurchases(userEmail: string) {
       continue;
     }
 
+    const BeneficeJour = packageData.price * (packageData.interestRate/100);
+    const TotalBenefice = BeneficeJour * packageData.duration;
+
+
     result.push({
       transactionId: transaction.id,
       packageName: packageData.name,
       packageImage: packageData.image,
+      BeneficeJour : BeneficeJour,
+      TotalBenefice : TotalBenefice,
       packageProgress: packageData.progressPercentage,
       purchaseDate: transaction.createdAt, // Date de l'achat
       amountPaid: transaction.amount, // Montant payé pour le package
