@@ -289,7 +289,7 @@ static async distributeCommissions(user: User, packageToBuy: Package) {
 
       if (grandParentReferrer) {
         // Calcul de la commission pour le grand-parent (5 %)
-        const grandParentReferrerCommission = (packageToBuy.price * 5) / 100;
+        const grandParentReferrerCommission = (packageToBuy.price * 5) / 200;
         grandParentReferrer.referral_balance = (grandParentReferrer.referral_balance || 0) + grandParentReferrerCommission;
         await grandParentReferrer.save();
 
